@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session
 from utils.db import engine, crear_db, get_session
-from data.models import Usuario, EstadoUsuario
+from data.models import Usuario, EstadoUsuario, Tarea, EstadoTarea, TareaCreate
 from operations.operations_db import (
     crear_usuario,
     obtener_usuarios,
@@ -9,7 +9,12 @@ from operations.operations_db import (
     actualizar_usuario,
     eliminar_usuario,
     usuarios_por_estado,
-    usuarios_premium_y_activos
+    usuarios_premium_y_activos,
+    crear_tarea,
+    obtener_tareas,
+    obtener_tarea,
+    actualizar_tarea,
+    eliminar_tarea
 )
 
 app = FastAPI()
@@ -54,3 +59,28 @@ def por_estado(estado: EstadoUsuario, session: Session = Depends(get_session)):
 @app.get("/usuarios/premium/activos")
 def premium_activos(session: Session = Depends(get_session)):
     return usuarios_premium_y_activos(session)
+@app.post("/tareas/", response_model=Tarea)
+def crear(tarea: Tarea, session: Session = Depends(get_session)):
+    return crear_tarea(session, tarea)
+
+@app.get("/tareas/", response_model=Tarea)
+def listar_tareas(session: Session = Depends(get_session)):
+    return obtener_tareas(session)
+
+@app.get("/tareas/{tarea_id}", response_model=Tarea)
+def obtener(tarea_id: int, session: Session = Depends(get_session)):
+    return obtener_tarea(session, tarea_id)
+
+@app.put("/tareas/{tarea_id}", response_model=Tarea)
+def actualizar(tarea_id: int, tarea: Tarea, session: Session = Depends(get_session)):
+    return actualizar_tarea(session, tarea_id, tarea)
+
+@app.delete("/tareas/{tarea_id}")
+def eliminar(tarea_id: int, session: Session = Depends(get_session)):
+    eliminar_tarea(session, tarea_id)
+    return {"ok": True}
+
+@app.post("/tareas/", response_model=Tarea)
+def crear(tarea_data: TareaCreate, session: Session = Depends(get_session)):
+    nueva_tarea = Tarea(**tarea_data.dict())
+    return crear_tarea(session, nueva_tarea)
